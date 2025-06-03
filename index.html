@@ -1,0 +1,1695 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frida Kahlo & Diego Rivera: Avanguardie Oltreoceano</title>
+    <meta name="description" content="Progetto CLIL su Frida Kahlo e Diego Rivera: vita, opere e contesto storico delle avanguardie del '900">
+    <!-- Font Google -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Trocchi&display=swap" rel="stylesheet">
+    <!-- Leaflet CSS (per mappa) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <!-- Stili CSS -->
+    <style>
+        :root {
+            --rosso-frida: #9e2b2b;
+            --blu-rivera: #1a5276;
+            --oro: #d4ac0d;
+            --grigio-scuro: #333;
+            --beige: #f5f5dc;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            color: var(--grigio-scuro);
+            line-height: 1.8;
+            background-color: var(--beige);
+        }
+        
+        h1, h2, h3 {
+            font-family: 'Playfair Display', serif;
+        }
+        
+        /* Navbar */
+        nav {
+            background-color: var(--grigio-scuro);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            padding: 15px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        nav ul {
+            display: flex;
+            justify-content: center;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            flex-wrap: wrap;
+        }
+        
+        nav li {
+            margin: 0 15px;
+        }
+        
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1rem;
+            transition: color 0.3s;
+            font-family: 'Trocchi', serif;
+        }
+        
+        nav a:hover {
+            color: var(--oro);
+        }
+        
+        /* Header */
+        header {
+            background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://kuadros.com/cdn/shop/products/frida-and-diego-rivera.jpg?v=1705658384&width=700');
+            background-size: cover;
+            background-position: center;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: white;
+            padding: 0 20px;
+            animation: fadeIn 1.5s ease-in;
+        }
+        
+        h1 {
+            font-size: 4rem;
+            margin-bottom: 0;
+            text-shadow: 3px 3px 8px rgba(0,0,0,0.7);
+            font-family: 'Cinzel', serif;
+            color: #fff;
+            letter-spacing: 2px;
+        }
+        
+        .subtitle {
+            font-size: 2rem;
+            font-style: italic;
+            margin-top: 20px;
+            font-weight: 300;
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+            color: white;
+            font-family: 'Trocchi', serif;
+        }
+        
+        /* MODIFICHE PER IL TOGGLE DELLA LINGUA */
+        .language-toggle {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 20;
+            display: flex;
+            gap: 10px;
+            background: rgba(300, 300, 200, 0.1);
+            backdrop-filter: blur(2px);
+            border-radius: 30px;
+            padding: 5px 9px;
+            box-shadow: px 90px rgba(300,300,300,0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .language-toggle:hover {
+            background: rgba(255, 255, 255, 0.8);
+        }
+        
+        .language-toggle button {
+            background: rgba(255,255,255,0.6);
+            border: none;
+            padding: 1px 15px;
+            cursor: pointer;
+            border-radius: 90px;
+            font-weight: bold;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .language-toggle button:hover {
+            background: var(--oro);
+        }
+        
+        .language-toggle img {
+            width: 20px;
+            height: auto;
+        }
+        
+        .language-toggle button.active {
+            background: var(--oro);
+            transform: scale(1.05);
+        }
+        
+        section {
+            padding: 80px 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+            animation: fadeIn 1s ease-in;
+        }
+        
+        .section-title {
+            text-align: center;
+            margin-bottom: 50px;
+            color: var(--rosso-frida);
+            font-size: 2.5rem;
+            position: relative;
+        }
+        
+        .section-title:after {
+            content: '';
+            display: block;
+            width: 100px;
+            height: 3px;
+            background: var(--blu-rivera);
+            margin: 15px auto;
+        }
+        
+        /* Timeline */
+        .timeline {
+            position: relative;
+            margin: 60px 0;
+        }
+        
+        .timeline-header {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 1.5rem;
+            color: var(--blu-rivera);
+            font-weight: bold;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--blu-rivera);
+            transform: translateX(-50%);
+        }
+        
+        .timeline-item {
+            padding: 25px;
+            margin-bottom: 40px;
+            width: 45%;
+            position: relative;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        
+        .timeline-item:hover {
+            transform: translateY(-5px);
+        }
+        
+        .timeline-item.frida {
+            margin-right: auto;
+            border-left: 4px solid var(--rosso-frida);
+        }
+        
+        .timeline-item.diego {
+            margin-left: auto;
+            border-right: 4px solid var(--blu-rivera);
+        }
+        
+        .timeline-year {
+            font-weight: bold;
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+        }
+        
+        .timeline-item.frida .timeline-year {
+            color: var(--rosso-frida);
+            background: rgba(158, 43, 43, 0.1);
+        }
+        
+        .timeline-item.diego .timeline-year {
+            color: var(--blu-rivera);
+            background: rgba(26, 82, 118, 0.1);
+        }
+        
+        /* Galleria */
+        .art-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 50px 0;
+        }
+        
+        .artist-section {
+            margin-bottom: 60px;
+        }
+        
+        .artist-section h3 {
+            text-align: center;
+            font-size: 1.8rem;
+            margin-bottom: 30px;
+            color: var(--rosso-frida);
+        }
+        
+        .artist-section.diego h3 {
+            color: var(--blu-rivera);
+        }
+        
+        .art-card {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .art-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+        }
+        
+        .art-card img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            transition: opacity 0.5s;
+            opacity: 0;
+        }
+        
+        .art-card img.loaded {
+            opacity: 1;
+        }
+        
+        .art-info {
+            padding: 20px;
+            display: none;
+        }
+        
+        .art-info h4 {
+            color: var(--blu-rivera);
+            margin-top: 0;
+            font-size: 1.4rem;
+        }
+        
+        .art-card.active .art-info {
+            display: block;
+        }
+        
+        /* Lightbox */
+        .lightbox {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .lightbox-content {
+            max-width: 90%;
+            max-height: 90%;
+        }
+        
+        .lightbox-content img {
+            max-width: 100%;
+            max-height: 80vh;
+            display: block;
+            margin: 0 auto;
+        }
+        
+        .lightbox-caption {
+            color: white;
+            text-align: center;
+            margin-top: 15px;
+            font-size: 1.2rem;
+        }
+        
+        .close-lightbox {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: white;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        /* Sezione contesto */
+        .context-content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .context-content p {
+            margin-bottom: 20px;
+        }
+        
+        /* Mappa */
+        #map {
+            height: 400px;
+            width: 100%;
+            border-radius: 8px;
+            margin: 30px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        /* Curiosità */
+        .fun-facts {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .fun-facts h3 {
+            color: var(--rosso-frida);
+            margin-top: 25px;
+        }
+        
+        .fun-facts ul {
+            padding-left: 20px;
+        }
+        
+        .fun-facts li {
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        
+        /* Vocabolario */
+        .vocab-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .vocab-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        .vocab-card h4 {
+            color: var(--blu-rivera);
+            margin-top: 0;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        
+        /* Quiz */
+        .quiz-container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .quiz-question {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .quiz-question h3 {
+            color: var(--blu-rivera);
+        }
+        
+        .quiz-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .quiz-option {
+            padding: 15px;
+            background: #f9f9f9;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .quiz-option:hover {
+            background: #f0f0f0;
+        }
+        
+        .quiz-option.correct {
+            background: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        
+        .quiz-option.incorrect {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        
+        .quiz-feedback {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .quiz-feedback.show {
+            display: block;
+        }
+        
+        .correct-feedback {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .incorrect-feedback {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .quiz-results {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            display: none;
+        }
+        
+        .quiz-results.show {
+            display: block;
+        }
+        
+        /* Footer */
+        footer {
+            background-color: var(--grigio-scuro);
+            color: white;
+            text-align: center;
+            padding: 40px;
+            margin-top: 60px;
+        }
+        
+        footer p {
+            margin: 0;
+        }
+        
+        /* Animazioni */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        /* NUOVO PULSANTE TORNA SU */
+        #back-to-top {
+            display: none;
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 2000;
+            width: 50px;
+            height: 50px;
+            border: none;
+            border-radius: 50%;
+            background-color: var(--blu-rivera);
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transition: all 0.3s ease-out;
+        }
+        
+        #back-to-top:hover {
+            background-color: var(--rosso-frida);
+            transform: scale(1.1);
+        }
+        
+        /* MIGLIORAMENTO ANIMAZIONI */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        header {
+            animation: fadeIn 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+            will-change: transform, opacity;
+        }
+        
+        section {
+            animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            will-change: transform, opacity;
+            opacity: 0;
+        }
+        
+        .timeline-item {
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        .art-card {
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.8rem;
+            }
+            
+            .subtitle {
+                font-size: 1.5rem;
+            }
+            
+            nav ul {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            nav li {
+                margin: 5px 0;
+            }
+            
+            .timeline::before {
+                left: 20px;
+            }
+            
+            .timeline-item {
+                width: 85% !important;
+                margin-left: 15% !important;
+            }
+            
+            .art-gallery {
+                grid-template-columns: 1fr;
+            }
+            
+            .quiz-options {
+                grid-template-columns: 1fr;
+            }
+            
+            .vocab-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .language-toggle {
+                top: 15px;
+                right: 15px;
+                flex-direction: row;
+                padding: 5px 10px;
+            }
+            
+            #back-to-top {
+                bottom: 20px;
+                right: 20px;
+                width: 45px;
+                height: 45px;
+            }
+        }
+        
+    </style>
+</head>
+<body>
+    <!-- Toggle Lingua -->
+    <div class="language-toggle">
+        <button id="lang-it" class="active">IT <img src="https://flagcdn.com/w20/it.png" alt="Italian flag"></button>
+        <button id="lang-es">ES <img src="https://flagcdn.com/w20/es.png" alt="Spanish flag"></button>
+    </div>
+
+    <!-- Navbar -->
+    
+
+    <!-- Header -->
+    <header>
+        <h1 id="main-title">Frida Kahlo & Diego Rivera</h1>
+        <p class="subtitle" id="subtitle">Avanguardie Oltreoceano</p>
+    </header>
+
+    <!-- Sezione Introduzione -->
+    <section id="intro">
+        <h2 class="section-title" id="intro-title">L'Incontro tra Due Mondi</h2>
+        <p id="intro-text">Nel panorama artistico del Novecento, le avanguardie hanno rappresentato una vera e propria rivoluzione. Movimenti come il Futurismo, il Surrealismo e il Cubismo hanno rotto con la tradizione, cercando nuove forme di espressione per raccontare un mondo in rapido cambiamento. In questo contesto dinamico si inseriscono due figure emblematiche dell'arte messicana: Frida Kahlo e Diego Rivera.
+
+Pur condividendo una visione profondamente radicata nell'identità e nella storia del loro paese, i due artisti percorsero strade stilistiche diverse. Rivera, esponente del muralismo, utilizzò l'arte pubblica per raccontare la lotta sociale e la dignità del popolo. Kahlo, invece, trasformò la sua pittura in un linguaggio intimo e simbolico, affrontando con coraggio temi come il dolore, l'identità e il corpo, avvicinandosi al Surrealismo pur non identificandosi pienamente con esso.
+
+Insieme, Frida e Diego incarnano l'anima rivoluzionaria dell'arte del Novecento: personale, politica, profondamente autentica.</p>
+    </section>
+
+    <!-- Sezione Timeline -->
+    <section id="timeline-section">
+        <h2 class="section-title" id="timeline-title">Cronologia Artistica</h2>
+        <div class="timeline">
+            <div class="timeline-header" id="frida-header">Frida Kahlo – Vita e carriera artistica</div>
+            
+            <!-- Frida Kahlo -->
+            <div class="timeline-item frida" data-translate-key="frida-1907">
+                <div class="timeline-year">1907</div>
+                <p>Nasce a Coyoacán, Città del Messico.</p>
+            </div>
+            <div class="timeline-item frida" data-translate-key="frida-1922">
+                <div class="timeline-year">1922</div>
+                <p>Entra alla Scuola Nazionale Preparatoria; è tra le prime donne ammesse.</p>
+            </div>
+            <div class="timeline-item frida" data-translate-key="frida-1925">
+                <div class="timeline-year">1925</div>
+                <p>Subisce un grave incidente in autobus, che cambia radicalmente la sua vita. Inizia a dipingere durante la convalescenza.</p>
+            </div>
+            <div class="timeline-item frida" data-translate-key="frida-1926">
+                <div class="timeline-year">1926</div>
+                <p>Realizza Autoritratto con vestito di velluto, considerata la sua prima opera matura.</p>
+            </div>
+            <div class="timeline-item frida" data-translate-key="frida-1929">
+                <div class="timeline-year">1929</div>
+                <p>Sposa Diego Rivera.</p>
+            </div>
+            <div class="timeline-item frida" data-translate-key="frida-1931">
+                <div class="timeline-year">1931</div>
+                <p>Espone a San Francisco insieme a Rivera e dipinge Frida e Diego Rivera.</p>
+            </div>
+            <div class="timeline-item frida" data-translate-key="frida-1938">
+                <div class="timeline-year">1938</div>
+                <p>Tiene la sua prima mostra personale alla Julien Levy Gallery di New York, con grande successo.</p>
+            </div>
+            <div class="timeline-item frida" data-translate-key="frida-1939">
+                <div class="timeline-year">1939</div>
+                <p>Espone a Parigi: il Louvre acquista una sua opera (Il quadro), prima artista messicana nella collezione del museo. Nello stesso anno, dipinge Le due Frida, una delle sue opere più celebri. Divorzia da Rivera.</p>
+            </div>
+            <div class="timeline-item frida" data-translate-key="frida-1940">
+                <div class="timeline-year">1940</div>
+                <p>Si risposa con Diego Rivera.</p>
+            </div>
+            <div class="timeline-item frida" data-translate-key="frida-1944">
+                <div class="timeline-year">1944-1954</div>
+                <p>Periodo delle opere più intime e simboliche: La colonna spezzata, Il cervo ferito, L'abbraccio d'amore dell'universo.</p>
+            </div>
+            <div class="timeline-item frida" data-translate-key="frida-1953">
+                <div class="timeline-year">1953</div>
+                <p>Prima e unica mostra personale in Messico: vi partecipa in barella a causa delle sue condizioni di salute.</p>
+            </div>
+            <div class="timeline-item frida" data-translate-key="frida-1954">
+                <div class="timeline-year">1954</div>
+                <p>Muore a 47 anni a Coyoacán.</p>
+            </div>
+            
+            <div class="timeline-header" id="diego-header">Diego Rivera – Vita e carriera artistica</div>
+            
+            <!-- Diego Rivera -->
+            <div class="timeline-item diego" data-translate-key="diego-1886">
+                <div class="timeline-year">1886</div>
+                <p>Nasce a Guanajuato, Messico.</p>
+            </div>
+            <div class="timeline-item diego" data-translate-key="diego-1897">
+                <div class="timeline-year">1897</div>
+                <p>Studia all'Accademia di San Carlos a Città del Messico.</p>
+            </div>
+            <div class="timeline-item diego" data-translate-key="diego-1907">
+                <div class="timeline-year">1907-1921</div>
+                <p>Vive e lavora in Europa (Spagna, Francia, Italia). A Parigi entra in contatto con il Cubismo e l'arte moderna.</p>
+            </div>
+            <div class="timeline-item diego" data-translate-key="diego-1922">
+                <div class="timeline-year">1922</div>
+                <p>Inizia il primo grande ciclo di murales presso il Ministero dell'Istruzione Pubblica a Città del Messico: diventa una figura chiave del muralismo messicano.</p>
+            </div>
+            <div class="timeline-item diego" data-translate-key="diego-1929">
+                <div class="timeline-year">1929</div>
+                <p>Sposa Frida Kahlo.</p>
+            </div>
+            <div class="timeline-item diego" data-translate-key="diego-1931">
+                <div class="timeline-year">1931</div>
+                <p>Ottiene una grande retrospettiva al MoMA di New York.</p>
+            </div>
+            <div class="timeline-item diego" data-translate-key="diego-1933">
+                <div class="timeline-year">1933</div>
+                <p>Realizza un affresco per il Rockefeller Center a New York, che viene distrutto a causa della presenza di Lenin nel dipinto.</p>
+            </div>
+            <div class="timeline-item diego" data-translate-key="diego-1940">
+                <div class="timeline-year">1940</div>
+                <p>Si risposa con Frida Kahlo dopo il divorzio. Inizia il murale Panorama dell'oppressione e della resistenza in Messico.</p>
+            </div>
+            <div class="timeline-item diego" data-translate-key="diego-1947">
+                <div class="timeline-year">1947</div>
+                <p>Pubblica la sua autobiografia My Art, My Life.</p>
+            </div>
+            <div class="timeline-item diego" data-translate-key="diego-1952">
+                <div class="timeline-year">1952</div>
+                <p>Completa uno dei suoi più grandi lavori: il murale dell'Università Autonoma di Città del Messico.</p>
+            </div>
+            <div class="timeline-item diego" data-translate-key="diego-1957">
+                <div class="timeline-year">1957</div>
+                <p>Muore a 70 anni a Città del Messico.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sezione Galleria Opere -->
+    <section id="gallery">
+        <h2 class="section-title" id="gallery-title">Opere Iconiche</h2>
+        
+        <!-- Frida Kahlo -->
+        <div class="artist-section">
+            <h3 id="frida-gallery-title">Frida Kahlo</h3>
+            <div class="art-gallery">
+                <div class="art-card" onclick="toggleArtInfo(this)">
+                    <img src="https://www.greenme.it/wp-content/uploads/2019/12/le-due-frida-soffrire-per-amore-min-1024x683.jpg" alt="Las dos Fridas di Frida Kahlo" onload="this.classList.add('loaded')">
+                    <div class="art-info">
+                        <h4 data-translate-key="frida-work1-title">Las dos Fridas (1939)</h4>
+                        <p data-translate-key="frida-work1-desc">Una delle sue più celebri è Le due Frida (1939), dove si autoritrae in duplice versione: una con abito europeo e una con abiti tradizionali messicani. Le due figure sono collegate da una vena che simboleggia il legame tra le due identità e il dolore del cuore spezzato. È un'opera che riflette la frattura interiore vissuta da Frida dopo la separazione da Diego Rivera e rappresenta la sua lotta tra modernità e radici culturali.</p>
+                        <button onclick="openLightbox('https://www.greenme.it/wp-content/uploads/2019/12/le-due-frida-soffrire-per-amore-min-1024x683.jpg', 'Las dos Fridas (1939)')">Vedi ingrandito</button>
+                    </div>
+                </div>
+                <div class="art-card" onclick="toggleArtInfo(this)">
+                    <img src="https://arthive.com/res/media/img/oy1200/work/edd/264845@2x.jpeg" alt="La columna rota di Frida Kahlo" onload="this.classList.add('loaded')">
+                    <div class="art-info">
+                        <h4 data-translate-key="frida-work2-title">La columna rota (1944)</h4>
+                        <p data-translate-key="frida-work2-desc">Un'altra opera iconica è La colonna spezzata (1944), un autoritratto in cui Frida si mostra con il busto aperto, la colonna vertebrale sostituita da una colonna ionica fratturata e il corpo trafitto da chiodi. È un'immagine potente e dolorosa che rappresenta le sue gravi sofferenze fisiche e psicologiche. L'artista si presenta nuda, vulnerabile, ma con lo sguardo fiero e diretto verso l'osservatore, trasformando il dolore in forza.</p>
+                        <button onclick="openLightbox('https://arthive.com/res/media/img/oy1200/work/edd/264845@2x.jpeg', 'La columna rota (1944)')">Vedi ingrandito</button>
+                    </div>
+                </div>
+                <div class="art-card" onclick="toggleArtInfo(this)">
+                    <img src="https://totenart.com/noticias/wp-content/uploads/2021/04/1940-autorretrato-con-collar-de-espinas-1940.jpg" alt="Autorretrato con collar de espinas di Frida Kahlo" onload="this.classList.add('loaded')">
+                    <div class="art-info">
+                        <h4 data-translate-key="frida-work3-title">Autorretrato con collar de espinas (1940)</h4>
+                        <p data-translate-key="frida-work3-desc">Infine, Autoritratto con collana di spine (1940) mostra Frida circondata da simboli forti: una scimmia che le tira la collana di spine, un gatto nero e colibrì morto. Tutti elementi ricchi di significato, tra cristianesimo, cultura azteca e visione personale del dolore. Anche qui, la sofferenza non è nascosta, ma resa visibile come parte integrante della sua identità.</p>
+                        <button onclick="openLightbox('https://totenart.com/noticias/wp-content/uploads/2021/04/1940-autorretrato-con-collar-de-espinas-1940.jpg', 'Autorretrato con collar de espinas (1940)')">Vedi ingrandito</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Diego Rivera -->
+        <div class="artist-section diego">
+            <h3 id="diego-gallery-title">Diego Rivera</h3>
+            <div class="art-gallery">
+                <div class="art-card" onclick="toggleArtInfo(this)">
+                    <img src="https://cdn.culturagenial.com/es/imagenes/elo-hombre-cke.jpg?class=article" alt="El hombre controlador del universo di Diego Rivera" onload="this.classList.add('loaded')">
+                    <div class="art-info">
+                        <h4 data-translate-key="diego-work1-title">El hombre controlador del universo (1934)</h4>
+                        <p data-translate-key="diego-work1-desc">Un'opera fondamentale è El hombre controlador del universo (1934). Commissionata per il Rockefeller Center di New York, l'opera fu distrutta a causa della presenza di Lenin nel dipinto, giudicata inaccettabile dalla committenza. Rivera ricreò il murale in Messico, raccontando l'umanità divisa tra capitalismo e socialismo, progresso tecnologico e ingiustizia. L'opera è un esempio emblematico del suo impegno politico e della sua visione ideologica.</p>
+                        <button onclick="openLightbox('https://cdn.culturagenial.com/es/imagenes/elo-hombre-cke.jpg?class=article', 'El hombre controlador del universo (1934)')">Vedi ingrandito</button>
+                    </div>
+                </div>
+                <div class="art-card" onclick="toggleArtInfo(this)">
+                    <img src="https://cdn.culturagenial.com/es/imagenes/de-la-conquista-a-1930-2011-cke.jpg?class=article" alt="La epopeya del pueblo mexicano di Diego Rivera" onload="this.classList.add('loaded')">
+                    <div class="art-info">
+                        <h4 data-translate-key="diego-work2-title">La epopeya del pueblo mexicano (1929-1935)</h4>
+                        <p data-translate-key="diego-work2-desc">Epopeya del pueblo mexicano è un grande murale di Diego Rivera, dipinto tra il 1929 e il 1935 nel Palazzo Nazionale di Città del Messico. Raffigura la storia del Messico dalle civiltà precolombiane alla Rivoluzione, con un forte messaggio sociale e politico. Rivera esalta le radici indigene, denuncia la conquista spagnola e celebra la lotta del popolo contro l'oppressione. È una delle opere più rappresentative del muralismo messicano.</p>
+                        <button onclick="openLightbox('https://cdn.culturagenial.com/es/imagenes/de-la-conquista-a-1930-2011-cke.jpg?class=article', 'La epopeya del pueblo mexicano (1929-1935)')">Vedi ingrandito</button>
+                    </div>
+                </div>
+                <div class="art-card" onclick="toggleArtInfo(this)">
+                    <img src="https://www.infobae.com/resizer/v2/BFSZLT33IBHHNFESSIZEBFVCXU.jpg?auth=e1bd68cf5c498a957399e694b6580c4b931fe39a01bedfa25ebabcab8dfecce8&smart=true&width=992&height=441&quality=85" alt="Industria de Detroit di Diego Rivera" onload="this.classList.add('loaded')">
+                    <div class="art-info">
+                        <h4 data-translate-key="diego-work3-title">Pared sur de "Industria de Detroit" (1932)</h4>
+                        <p data-translate-key="diego-work3-desc">Pared Sur de la Industria de Detroit è uno dei pannelli centrali del ciclo murale di Diego Rivera al Detroit Institute of Arts (1932-1933). Rappresenta gli operai nelle catene di montaggio della Ford, in un ambiente industriale dinamico e meccanizzato. Rivera esalta la forza del lavoro umano, ma mostra anche la fatica e l'alienazione causate dall'industria moderna. È un'opera che unisce arte, tecnologia e critica sociale.</p>
+                        <button onclick="openLightbox('https://www.infobae.com/resizer/v2/BFSZLT33IBHHNFESSIZEBFVCXU.jpg?auth=e1bd68cf5c498a957399e694b6580c4b931fe39a01bedfa25ebabcab8dfecce8&smart=true&width=992&height=441&quality=85', 'Pared sur de "Industria de Detroit" (1932)')">Vedi ingrandito</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Lightbox -->
+    <div id="lightbox" class="lightbox">
+        <span class="close-lightbox" onclick="closeLightbox()">&times;</span>
+        <div class="lightbox-content">
+            <img id="lightbox-img" src="" alt="">
+            <div id="lightbox-caption" class="lightbox-caption"></div>
+        </div>
+    </div>
+
+    <!-- Sezione Contesto Storico -->
+   <section id="context">
+    <h2 class="section-title" id="context-title">Le Avanguardie del '900</h2>
+    <div class="context-content">
+        <p data-translate-key="context-p1">Il Novecento è stato un secolo di rivoluzioni artistiche che hanno ridefinito completamente il concetto di arte. Le avanguardie, movimenti culturali d'avanguardia, hanno sfidato le convenzioni tradizionali esplorando nuove forme de espressione.</p>
+        
+        <h3 data-translate-key="context-h3-1">Surrealismo</h3>
+        <p data-translate-key="context-p2">Il Surrealismo, nato negli anni '20, cercava di esplorare l'inconscio e il mondo dei sogni. Sebbene Frida Kahlo negasse di essere una surrealista, molte delle sue opere mostrano chiari elementi surrealisti nella rappresentazione simbolica del suo mondo interiore.</p>
+        
+        <h3 data-translate-key="context-h3-2">Muralismo Messicano</h3>
+        <p data-translate-key="context-p3">Diego Rivera fu uno dei massimi esponenti del muralismo messicano, movimento che utilizzava grandi affreschi murali per raccontare la storia e le lotte sociali del Messico. Questo movimento ebbe un forte impatto politico e sociale.</p>
+        
+        <h3 data-translate-key="context-h3-3">Cubismo</h3>
+        <p data-translate-key="context-p4">Durante il suo soggiorno a Parigi, Rivera fu influenzato dal Cubismo di Picasso, che frammentava la realtà in forme geometriche. Questa esperienza influenzò il suo stile maturo, pur mantenendo sempre un forte legame con la tradizione messicana.</p>
+    </div>
+</section>
+
+    <!-- Sezione Mappa -->
+    <section id="map-section">
+        <h2 class="section-title" id="map-title">Luoghi Significativi</h2>
+        <div id="map"></div>
+        <p id="map-description" data-translate-key="map-description">Questa mappa mostra i luoghi più importanti nella vita di Frida Kahlo e Diego Rivera, dalla loro nascita alle principali opere realizzate in Messico e all'estero.</p>
+    </section>
+
+    <!-- Sezione Curiosità -->
+    <section id="fun-facts">
+        <h2 class="section-title" id="facts-title">Cose che non sai su Frida e Diego...</h2>
+        <div class="fun-facts">
+            <h3 id="facts-subtitle">Curiosità divertenti su Frida Kahlo e Diego Rivera</h3>
+            <ul>
+                <li data-translate-key="fact1"><strong>Frida e il suo amore per gli animali "strani"</strong><br>
+                Oltre a cani e uccelli, Frida aveva una scimmietta chiamata "Fulang-Chang" che era quasi come un membro della famiglia... a volte le faceva anche dei piccoli "sguardi di disapprovazione" come una vera sorella maggiore!</li>
+                
+                <li data-translate-key="fact2"><strong>Diego Rivera era un tipo molto "alto"</strong><br>
+                Diego era davvero alto: misurava più di 1,90 m! Insieme a Frida, che era molto più piccola, formavano una coppia con un enorme contrasto di altezza, tanto che spesso scherzavano su questo.</li>
+                
+                <li data-translate-key="fact3"><strong>Frida, campionessa di poker... con la famiglia</strong><br>
+                Pare che Frida fosse molto competitiva a carte, e amasse giocare a poker con la famiglia e gli amici. Si dice che fosse davvero brava a bluffare!</li>
+                
+                <li data-translate-key="fact4"><strong>Diego Rivera e i suoi "amori artistici"</strong><br>
+                Oltre a Frida, Diego ebbe molte storie d'amore, ma la più curiosa è che per un po' si innamorò della nipote di Frida... un vero giro di famiglia complicato!</li>
+                
+                <li data-translate-key="fact5"><strong>Frida e le sue sopracciglia leggendarie</strong><br>
+                Le sopracciglia di Frida sono diventate iconiche, ma lei le curava con molta cura, tanto che diceva di non volerle mai separare. Era una vera "modella" delle sopracciglia folte!</li>
+                
+                <li data-translate-key="fact6"><strong>Diego Rivera e il pranzo da record</strong><br>
+                Si racconta che Diego fosse un grande amante del cibo e riuscisse a mangiare quantità incredibili di cibo messicano, soprattutto tamales e mole. A tavola non si tirava mai indietro!</li>
+                
+                <li data-translate-key="fact7"><strong>Frida e i suoi autoritratti... persino mentre stava male</strong><br>
+                Quando era costretta a letto per le sue cure, Frida si faceva ritrarre con uno specchio sopra il letto, dimostrando che anche nella malattia non perdeva mai il senso dell'umorismo e della creatività.</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Sezione Vocabolario -->
+    <section id="vocabulary">
+    <h2 class="section-title" id="vocab-title">Vocabolario Artistico</h2>
+    <div class="vocab-grid">
+        <div class="vocab-card">
+            <h4 data-translate-key="vocab-title1">Autoritratto / Autorretrato</h4>
+            <p data-translate-key="vocab-desc1">Ritratto di un artista realizzato da sé stesso</p>
+        </div>
+        <div class="vocab-card">
+            <h4 data-translate-key="vocab-title2">Muralismo / Muralismo</h4>
+            <p data-translate-key="vocab-desc2">Movimento artistico che crea grandi dipinti su pareti e soffitti</p>
+        </div>
+        <div class="vocab-card">
+            <h4 data-translate-key="vocab-title3">Surrealismo / Surrealismo</h4>
+            <p data-translate-key="vocab-desc3">Movimento artistico che esplora l'inconscio e il mondo dei sogni</p>
+        </div>
+        <div class="vocab-card">
+            <h4 data-translate-key="vocab-title4">Simbolismo / Simbolismo</h4>
+            <p data-translate-key="vocab-desc4">Uso di simboli per rappresentare idee e emozioni</p>
+        </div>
+        <div class="vocab-card">
+            <h4 data-translate-key="vocab-title5">Avanguardia / Vanguardia</h4>
+            <p data-translate-key="vocab-desc5">Gruppo di artisti che sperimentano nuove idee e tecniche</p>
+        </div>
+        <div class="vocab-card">
+            <h4 data-translate-key="vocab-title6">Colore vibrante / Color vibrante</h4>
+            <p data-translate-key="vocab-desc6">Tonalità intense e vivaci tipiche dell'arte messicana</p>
+        </div>
+    </div>
+</section>
+
+    <!-- Sezione Quiz -->
+    <section id="quiz-section">
+        <h2 class="section-title" id="quiz-title">Mettiti alla prova!</h2>
+        <div class="quiz-container">
+            <div class="quiz-question">
+                <h3 id="quiz-q1">1. Dove è nata Frida Kahlo?</h3>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkAnswer(this, false)" data-translate-key="quiz-q1-option1">A) Guadalajara</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, true)" data-translate-key="quiz-q1-option2">B) Città del Messico</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false)" data-translate-key="quiz-q1-option3">C) Monterrey</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false)" data-translate-key="quiz-q1-option4">D) Oaxaca</div>
+                </div>
+                <div class="quiz-feedback correct-feedback" data-translate-key="quiz-q1-feedback-correct">
+                    ✅ Esatto! Frida Kahlo è nata il 6 luglio 1907 a Coyoacán, un quartiere di Città del Messico.
+                </div>
+                <div class="quiz-feedback incorrect-feedback" data-translate-key="quiz-q1-feedback-incorrect">
+                    ❌ Sbagliato! La risposta corretta è: B) Città del Messico. Frida è nata a Coyoacán, un quartiere di Città del Messico.
+                </div>
+            </div>
+            
+            <div class="quiz-question">
+                <h3 id="quiz-q2">2. Cosa rappresenta spesso Frida nei suoi quadri?</h3>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkAnswer(this, false)" data-translate-key="quiz-q2-option1">A) Scene mitologiche</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false)" data-translate-key="quiz-q2-option2">B) Paesaggi naturali</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, true)" data-translate-key="quiz-q2-option3">C) Se stessa e il suo dolore</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false)" data-translate-key="quiz-q2-option4">D) Guerre</div>
+                </div>
+                <div class="quiz-feedback correct-feedback" data-translate-key="quiz-q2-feedback-correct">
+                    ✅ Corretto! Frida Kahlo è famosa per i suoi numerosi autoritratti che esplorano la sua identità, il dolore fisico e la sofferenza emotiva.
+                </div>
+                <div class="quiz-feedback incorrect-feedback" data-translate-key="quiz-q2-feedback-incorrect">
+                    ❌ Sbagliato! La risposta corretta è: C) Se stessa e il suo dolore. Frida è celebre per i suoi autoritratti introspettivi.
+                </div>
+            </div>
+            
+            <div class="quiz-question">
+                <h3 id="quiz-q3">3. Che tipo di arte realizzava principalmente Diego Rivera?</h3>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkAnswer(this, false)" data-translate-key="quiz-q3-option1">A) Scultura</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false)" data-translate-key="quiz-q3-option2">B) Mosaico</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, true)" data-translate-key="quiz-q3-option3">C) Murales</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false)" data-translate-key="quiz-q3-option4">D) Arte astratta</div>
+                </div>
+                <div class="quiz-feedback correct-feedback" data-translate-key="quiz-q3-feedback-correct">
+                    ✅ Giusto! Diego Rivera è considerato uno dei massimi esponenti del muralismo messicano, con opere monumentali che decorano edifici pubblici.
+                </div>
+                <div class="quiz-feedback incorrect-feedback" data-translate-key="quiz-q3-feedback-incorrect">
+                    ❌ Sbagliato! La risposta corretta è: C) Murales. Rivera è famoso per i suoi grandi murales a tema sociale e politico.
+                </div>
+            </div>
+            
+            <div class="quiz-question">
+                <h3 id="quiz-q4">4. In quale città si trova il ciclo di murales sulla "Industria di Detroit"?</h3>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkAnswer(this, false)" data-translate-key="quiz-q4-option1">A) Chicago</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false)" data-translate-key="quiz-q4-option2">B) New York</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, true)" data-translate-key="quiz-q4-option3">C) Detroit</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false)" data-translate-key="quiz-q4-option4">D) Boston</div>
+                </div>
+                <div class="quiz-feedback correct-feedback" data-translate-key="quiz-q4-feedback-correct">
+                    ✅ Esatto! Il ciclo "Detroit Industry Murals" (1932-1933) si trova al Detroit Institute of Arts e celebra l'industria automobilistica della città.
+                </div>
+                <div class="quiz-feedback incorrect-feedback" data-translate-key="quiz-q4-feedback-incorrect">
+                    ❌ Sbagliato! La risposta corretta è: C) Detroit. I murales si trovano al Detroit Institute of Arts.
+                </div>
+            </div>
+            
+            <div class="quiz-question">
+                <h3 id="quiz-q5">5. Quale delle seguenti è un'opera di Frida Kahlo?</h3>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkAnswer(this, true)" data-translate-key="quiz-q5-option1">A) Las dos Fridas</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false)" data-translate-key="quiz-q5-option2">B) La Guernica</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false)" data-translate-key="quiz-q5-option3">C) Il grido</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false)" data-translate-key="quiz-q5-option4">D) Noche estrellada</div>
+                </div>
+                <div class="quiz-feedback correct-feedback" data-translate-key="quiz-q5-feedback-correct">
+                    ✅ Bravo! "Las dos Fridas" (1939) è uno dei dipinti più famosi di Frida Kahlo, realizzato durante il suo divorzio da Diego Rivera.
+                </div>
+                <div class="quiz-feedback incorrect-feedback" data-translate-key="quiz-q5-feedback-incorrect">
+                    ❌ Sbagliato! La risposta corretta è: A) Las dos Fridas. Le altre opere sono di Picasso ("Guernica"), Munch ("Il grido") e Van Gogh ("Notte stellata").
+                </div>
+            </div>
+            
+            <div class="quiz-question">
+                <h3 id="quiz-q6">6. Chi dei due artisti ha vissuto a lungo in Europa?</h3>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkAnswer(this, false)" data-translate-key="quiz-q6-option1">A) Frida Kahlo</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, true)" data-translate-key="quiz-q6-option2">B) Diego Rivera</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false)" data-translate-key="quiz-q6-option3">C) Nessuno dei due</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false)" data-translate-key="quiz-q6-option4">D) Entrambi</div>
+                </div>
+                <div class="quiz-feedback correct-feedback" data-translate-key="quiz-q6-feedback-correct">
+                    ✅ Corretto! Diego Rivera visse in Europa (soprattutto a Parigi) dal 1907 al 1921, dove entrò in contatto con il Cubismo e altri movimenti d'avanguardia.
+                </div>
+                <div class="quiz-feedback incorrect-feedback" data-translate-key="quiz-q6-feedback-incorrect">
+                    ❌ Sbagliato! La risposta corretta è: B) Diego Rivera. Visse in Europa per 14 años, mentre Frida viaggiò molto ma non vi risiedette a lungo.
+                </div>
+            </div>
+            
+            <div class="quiz-results" id="quiz-results">
+                <h3>Risultato del Quiz</h3>
+                <p>Hai totalizzato <span id="quiz-score">0</span> punti su 6!</p>
+                <button onclick="resetQuiz()">Riprova</button>
+            </div>
+            
+            <button class="show-results" onclick="showResults()" style="display: none;">Mostra risultati</button>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p id="footer-text">Progetto CLIL Arte/Spagnolo - Realizzato da Iacopo Stendardo, Sephora Congedi, Tommaso Rizzo</p>
+    </footer>
+
+    <!-- Nuovo pulsante "Torna su" -->
+    <button id="back-to-top" title="Torna su">
+        ↑
+    </button>
+
+    <!-- Script -->
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+    // Variabili globali
+    let score = 0;
+    let answeredQuestions = 0;
+    let currentLang = 'it';
+    
+    // TRADUZIONI COMPLETE
+    const translations = {
+        'it': {
+            // Header
+            'main-title': 'Frida Kahlo & Diego Rivera',
+            'subtitle': 'Avanguardie Oltreoceano',
+            
+            // Navbar
+            'nav-intro': 'Introduzione',
+            'nav-timeline': 'Cronologia',
+            'nav-gallery': 'Opere',
+            'nav-context': 'Avanguardie',
+            'nav-facts': 'Curiosità',
+            'nav-quiz': 'Quiz',
+            'nav-vocab': 'Vocabolario',
+            
+            // Introduzione
+            'intro-title': 'L\'Incontro tra Due Mondi',
+            'intro-text': 'Nel panorama artistico del Novecento, le avanguardie hanno rappresentato una vera e propria rivoluzione. Movimenti come il Futurismo, il Surrealismo e il Cubismo hanno rotto con la tradizione, cercando nuove forme di espressione per raccontare un mondo in rapido cambiamento. In questo contesto dinamico si inseriscono due figure emblematiche dell\'arte messicana: Frida Kahlo e Diego Rivera.\n\nPur condividendo una visione profondamente radicata nell\'identità e nella storia del loro paese, i due artisti percorsero strade stilistiche diverse. Rivera, esponente del muralismo, utilizzò l\'arte pubblica per raccontare la lotta sociale e la dignità del popolo. Kahlo, invece, trasformò la sua pittura in un linguaggio intimo e simbolico, affrontando con coraggio temi come il dolore, l\'identità e il corpo, avvicinandosi al Surrealismo pur non identificandosi pienamente con esso.\n\nInsieme, Frida e Diego incarnano l\'anima rivoluzionaria dell\'arte del Novecento: personale, politica, profondamente autentica.',
+            
+            // Timeline
+            'timeline-title': 'Cronologia Artistica',
+            'frida-header': 'Frida Kahlo – Vita e carriera artistica',
+            'diego-header': 'Diego Rivera – Vita e carriera artistica',
+            
+            // Timeline Frida
+            'frida-1907': '1907 - Nasce a Coyoacán, Città del Messico.',
+            'frida-1922': '1922 - Entra alla Scuola Nazionale Preparatoria; è tra le prime donne ammesse.',
+            'frida-1925': '1925 - Subisce un grave incidente in autobus, che cambia radicalmente la sua vita. Inizia a dipingere durante la convalescenza.',
+            'frida-1926': '1926 - Realizza Autoritratto con vestito di velluto, considerata la sua prima opera matura.',
+            'frida-1929': '1929 - Sposa Diego Rivera.',
+            'frida-1931': '1931 - Espone a San Francisco insieme a Rivera e dipinge Frida e Diego Rivera.',
+            'frida-1938': '1938 - Tiene la sua prima mostra personale alla Julien Levy Gallery di New York, con grande successo.',
+            'frida-1939': '1939 - Espone a Parigi: il Louvre acquista una sua opera (Il quadro), prima artista messicana nella collezione del museo. Nello stesso anno, dipinge Le due Frida, una delle sue opere più celebri. Divorzia da Rivera.',
+            'frida-1940': '1940 - Si risposa con Diego Rivera.',
+            'frida-1944': '1944-1954 - Periodo delle opere più intime e simboliche: La colonna spezzata, Il cervo ferito, L\'abbraccio d\'amore dell\'universo.',
+            'frida-1953': '1953 - Prima e unica mostra personale in Messico: vi partecipa in barella a causa delle sue condizioni di salute.',
+            'frida-1954': '1954 - Muore a 47 anni a Coyoacán.',
+            
+            // Timeline Diego
+            'diego-1886': '1886 - Nasce a Guanajuato, Messico.',
+            'diego-1897': '1897 - Studia all\'Accademia di San Carlos a Città del Messico.',
+            'diego-1907': '1907-1921 - Vive e lavora in Europa (Spagna, Francia, Italia). A Parigi entra in contatto con il Cubismo e l\'arte moderna.',
+            'diego-1922': '1922 - Inizia il primo grande ciclo di murales presso il Ministero dell\'Istruzione Pubblica a Città del Messico: diventa una figura chiave del muralismo messicano.',
+            'diego-1929': '1929 - Sposa Frida Kahlo.',
+            'diego-1931': '1931 - Ottiene una grande retrospettiva al MoMA di New York.',
+            'diego-1933': '1933 - Realizza un affresco per il Rockefeller Center a New York, che viene distrutto a causa della presenza di Lenin nel dipinto.',
+            'diego-1940': '1940 - Si risposa con Frida Kahlo dopo il divorzio. Inizia il murale Panorama dell\'oppressione e della resistenza in Messico.',
+            'diego-1947': '1947 - Pubblica la sua autobiografia My Art, My Life.',
+            'diego-1952': '1952 - Completa uno dei suoi più grandi lavori: il murale dell\'Università Autonoma di Città del Messico.',
+            'diego-1957': '1957 - Muore a 70 anni a Città del Messico.',
+            
+            // Galleria
+            'gallery-title': 'Opere Iconiche',
+            'frida-gallery-title': 'Frida Kahlo',
+            'diego-gallery-title': 'Diego Rivera',
+            
+            // Opere Frida
+            'frida-work1-title': 'Las dos Fridas (1939)',
+            'frida-work1-desc': 'Una delle sue più celebri è Le due Frida (1939), dove si autoritrae in duplice versione: una con abito europeo e una con abiti tradizionali messicani. Le due figure sono collegate da una vena che simboleggia il legame tra le due identità e il dolore del cuore spezzato. È un\'opera che riflette la frattura interiore vissuta da Frida dopo la separazione da Diego Rivera e rappresenta la sua lotta tra modernità e radici culturali.',
+            'frida-work2-title': 'La columna rota (1944)',
+            'frida-work2-desc': 'Un\'altra opera iconica è La colonna spezzata (1944), un autoritratto in cui Frida si mostra con il busto aperto, la colonna vertebrale sostituita da una colonna ionica fratturata e il corpo trafitto da chiodi. È un\'immagine potente e dolorosa che rappresenta le sue gravi sofferenze fisiche e psicologiche. L\'artista si presenta nuda, vulnerabile, ma con lo sguardo fiero e diretto verso l\'osservatore, trasformando il dolore in forza.',
+            'frida-work3-title': 'Autorretrato con collar de espinas (1940)',
+            'frida-work3-desc': 'Infine, Autoritratto con collana di spine (1940) mostra Frida circondata da simboli forti: una scimmia che le tira la collana di spine, un gatto nero e colibrì morto. Tutti elementi ricchi di significato, tra cristianesimo, cultura azteca e visione personale del dolore. Anche qui, la sofferenza non è nascosta, ma resa visibile come parte integrante della sua identità.',
+            
+            // Opere Diego
+            'diego-work1-title': 'El hombre controlador del universo (1934)',
+            'diego-work1-desc': 'Un\'opera fondamentale è El hombre controlador del universo (1934). Commissionata per il Rockefeller Center di New York, l\'opera fu distrutta a causa della presenza di Lenin nel dipinto, giudicata inaccettabile dalla committenza. Rivera ricreò il murale in Messico, raccontando l\'umanità divisa tra capitalismo e socialismo, progresso tecnologico e ingiustizia. L\'opera è un esempio emblematico del suo impegno politico e della sua visione ideologica.',
+            'diego-work2-title': 'La epopeya del pueblo mexicano (1929-1935)',
+            'diego-work2-desc': 'Epopeya del pueblo mexicano è un grande murale di Diego Rivera, dipinto tra il 1929 e il 1935 nel Palazzo Nazionale di Città del Messico. Raffigura la storia del Messico dalle civiltà precolombiane alla Rivoluzione, con un forte messaggio sociale e politico. Rivera esalta le radici indigene, denuncia la conquista spagnola e celebra la lotta del popolo contro l\'oppressione. È una delle opere più rappresentative del muralismo messicano.',
+            'diego-work3-title': 'Pared sur de "Industria de Detroit" (1932)',
+            'diego-work3-desc': 'Pared Sur de la Industria de Detroit è uno dei pannelli centrali del ciclo murale di Diego Rivera al Detroit Institute of Arts (1932-1933). Rappresenta gli operai nelle catene di montaggio della Ford, in un ambiente industriale dinamico e meccanizzato. Rivera esalta la fuerza del lavoro umano, ma mostra anche la fatica e l\'alienazione causate dall\'industria moderna. È un\'opera che unisce arte, tecnologia e critica sociale.',
+            
+            // Contesto storico
+            'context-title': 'Le Avanguardie del \'900',
+            'context-p1': 'Il Novecento è stato un secolo di rivoluzioni artistiche che hanno ridefinito completamente il concetto di arte. Le avanguardie, movimenti culturali d\'avanguardia, hanno sfidato le convenzioni tradizionali esplorando nuove forme de espressione.',
+        'context-h3-1': 'Surrealismo',
+        'context-p2': 'Il Surrealismo, nato negli anni \'20, cercava di esplorare l\'inconscio e il mondo dei sogni. Sebbene Frida Kahlo negasse di essere una surrealista, molte delle sue opere mostrano chiari elementi surrealisti nella rappresentazione simbolica del suo mondo interiore.',
+        'context-h3-2': 'Muralismo Messicano',
+        'context-p3': 'Diego Rivera fu uno dei massimi esponenti del muralismo messicano, movimento che utilizzava grandi affreschi murali per raccontare la storia e le lotte sociali del Messico. Questo movimento ebbe un forte impatto politico e sociale.',
+        'context-h3-3': 'Cubismo',
+        'context-p4': 'Durante il suo soggiorno a Parigi, Rivera fu influenzato dal Cubismo di Picasso, che frammentava la realtà in forme geometriche. Questa esperienza influenzò il suo stile maturo, pur mantenendo sempre un forte legame con la tradizione messicana.',
+        
+        // Mappa
+        'map-description': 'Questa mappa mostra i luoghi più importanti nella vita di Frida Kahlo e Diego Rivera, dalla loro nascita alle principali opere realizzate in Messico e all\'estero.',
+            
+            // Mappa
+            'map-title': 'Luoghi Significativi',
+           
+        // ... traduzioni esistenti ...
+        'map-description': 'Questa mappa mostra i luoghi più importanti nella vita di Frida Kahlo e Diego Rivera, dalla loro nascita alle principali opere realizzate in Messico e all\'estero.',
+            
+            // Curiosità
+            'facts-title': 'Cose che non sai su Frida e Diego...',
+            'facts-subtitle': 'Curiosità divertenti su Frida Kahlo e Diego Rivera',
+            'fact1': '<strong>Frida e il suo amore per gli animali "strani"</strong><br>Oltre a cani e uccelli, Frida aveva una scimmietta chiamata "Fulang-Chang" che era quasi come un membro della famiglia... a volte le faceva anche dei piccoli "sguardi di disapprovazione" come una vera sorella maggiore!',
+            'fact2': '<strong>Diego Rivera era un tipo molto "alto"</strong><br>Diego era davvero alto: misurava più di 1,90 m! Insieme a Frida, che era molto più piccola, formavano una coppia con un enorme contrasto di altezza, tanto che spesso scherzavano su questo.',
+            'fact3': '<strong>Frida, campionessa di poker... con la famiglia</strong><br>Pare che Frida fosse molto competitiva a carte, e amasse giocare a poker con la famiglia e gli amici. Si dice che fosse davvero brava a bluffare!',
+            'fact4': '<strong>Diego Rivera e i suoi "amori artistici"</strong><br>Oltre a Frida, Diego ebbe molte storie d\'amore, ma la più curiosa è che per un po\' si innamorò della nipote di Frida... un vero giro di famiglia complicato!',
+            'fact5': '<strong>Frida e le sue sopracciglia leggendarie</strong><br>Le sopracciglia di Frida sono diventate iconiche, ma lei le curava con molta cura, tanto che diceva di non volerle mai separare. Era una vera "modella" delle sopracciglia folte!',
+            'fact6': '<strong>Diego Rivera e il pranzo da record</strong><br>Si racconta che Diego fosse un grande amante del cibo e riuscisse a mangiare quantità incredibili di cibo messicano, soprattutto tamales e mole. A tavola non si tirava mai indietro!',
+            'fact7': '<strong>Frida e i suoi autoritratti... persino mentre stava male</strong><br>Quando era costretta a letto per le sue cure, Frida si faceva ritrarre con uno specchio sopra il letto, dimostrando che anche nella malattia non perdeva mai il senso dell\'umorismo e della creatività.',
+            
+            // Vocabolario
+            'vocab-title': 'Vocabolario Artistico',
+            // Vocabolario
+        'vocab-title1': 'Autoritratto / Autorretrato',
+        'vocab-desc1': 'Ritratto di un artista realizzato da sé stesso',
+        'vocab-title2': 'Muralismo / Muralismo',
+        'vocab-desc2': 'Movimento artistico che crea grandi dipinti su pareti e soffitti',
+        'vocab-title3': 'Surrealismo / Surrealismo',
+        'vocab-desc3': 'Movimento artistico che esplora l\'inconscio e il mondo dei sogni',
+        'vocab-title4': 'Simbolismo / Simbolismo',
+        'vocab-desc4': 'Uso di simboli per rappresentare idee e emozioni',
+        'vocab-title5': 'Avanguardia / Vanguardia',
+        'vocab-desc5': 'Gruppo di artisti che sperimentano nuove idee e tecniche',
+        'vocab-title6': 'Colore vibrante / Color vibrante',
+        'vocab-desc6': 'Tonalità intense e vivaci tipiche dell\'arte messicana',
+            
+            // Quiz
+            'quiz-title': 'Mettiti alla prova!',
+            'quiz-q1': '1. Dove è nata Frida Kahlo?',
+            'quiz-q1-option1': 'A) Guadalajara',
+            'quiz-q1-option2': 'B) Città del Messico',
+            'quiz-q1-option3': 'C) Monterrey',
+            'quiz-q1-option4': 'D) Oaxaca',
+            'quiz-q1-feedback-correct': '✅ Esatto! Frida Kahlo è nata il 6 luglio 1907 a Coyoacán, un quartiere di Città del Messico.',
+            'quiz-q1-feedback-incorrect': '❌ Sbagliato! La risposta corretta è: B) Città del Messico. Frida è nata a Coyoacán, un quartiere di Città del Messico.',
+            
+            'quiz-q2': '2. Cosa rappresenta spesso Frida nei suoi quadri?',
+            'quiz-q2-option1': 'A) Scene mitologiche',
+            'quiz-q2-option2': 'B) Paesaggi naturali',
+            'quiz-q2-option3': 'C) Se stessa e il suo dolore',
+            'quiz-q2-option4': 'D) Guerre',
+            'quiz-q2-feedback-correct': '✅ Corretto! Frida Kahlo è famosa per i suoi numerosi autoritratti che esplorano la sua identità, il dolore fisico e la sofferenza emotiva.',
+            'quiz-q2-feedback-incorrect': '❌ Sbagliato! La risposta corretta è: C) Se stessa e il suo dolore. Frida è celebre per i suoi autoritratti introspettivi.',
+            
+            'quiz-q3': '3. Che tipo di arte realizzava principalmente Diego Rivera?',
+            'quiz-q3-option1': 'A) Scultura',
+            'quiz-q3-option2': 'B) Mosaico',
+            'quiz-q3-option3': 'C) Murales',
+            'quiz-q3-option4': 'D) Arte astratta',
+            'quiz-q3-feedback-correct': '✅ Giusto! Diego Rivera è considerato uno dei massimi esponenti del muralismo messicano, con opere monumentali che decorano edifici pubblici.',
+            'quiz-q3-feedback-incorrect': '❌ Sbagliato! La risposta corretta è: C) Murales. Rivera è famoso per i suoi grandi murales a tema sociale e politico.',
+            
+            'quiz-q4': '4. In quale città si trova il ciclo di murales sulla "Industria di Detroit"?',
+            'quiz-q4-option1': 'A) Chicago',
+            'quiz-q4-option2': 'B) New York',
+            'quiz-q4-option3': 'C) Detroit',
+            'quiz-q4-option4': 'D) Boston',
+            'quiz-q4-feedback-correct': '✅ Esatto! Il ciclo "Detroit Industry Murals" (1932-1933) si trova al Detroit Institute of Arts e celebra l\'industria automobilistica della città.',
+            'quiz-q4-feedback-incorrect': '❌ Sbagliato! La risposta corretta è: C) Detroit. I murales si trovano al Detroit Institute of Arts.',
+            
+            'quiz-q5': '5. Quale delle seguenti è un\'opera di Frida Kahlo?',
+            'quiz-q5-option1': 'A) Las dos Fridas',
+            'quiz-q5-option2': 'B) La Guernica',
+            'quiz-q5-option3': 'C) Il grido',
+            'quiz-q5-option4': 'D) Notte stellata',
+            'quiz-q5-feedback-correct': '✅ Bravo! "Las dos Fridas" (1939) è uno dei dipinti più famosi di Frida Kahlo, realizzato durante il suo divorzio da Diego Rivera.',
+            'quiz-q5-feedback-incorrect': '❌ Sbagliato! La risposta corretta è: A) Las dos Fridas. Le altre opere sono di Picasso ("Guernica"), Munch ("Il grido") e Van Gogh ("Notte stellata").',
+            
+            'quiz-q6': '6. Chi dei due artisti ha vissuto a lungo in Europa?',
+            'quiz-q6-option1': 'A) Frida Kahlo',
+            'quiz-q6-option2': 'B) Diego Rivera',
+            'quiz-q6-option3': 'C) Nessuno dei due',
+            'quiz-q6-option4': 'D) Entrambi',
+            'quiz-q6-feedback-correct': '✅ Corretto! Diego Rivera visse in Europa (soprattutto a Parigi) dal 1907 al 1921, dove entrò in contatto con il Cubismo e altri movimenti d\'avanguardia.',
+            'quiz-q6-feedback-incorrect': '❌ Sbagliato! La risposta corretta è: B) Diego Rivera. Visse in Europa per 14 anni, mentre Frida viaggiò molto ma non vi risiedette a lungo.',
+            
+            // Risultati quiz
+            'quiz-results-title': 'Risultato del Quiz',
+            'quiz-results-text': 'Hai totalizzato {score} punti su 6!',
+            'quiz-results-button': 'Riprova',
+            'quiz-show-results': 'Mostra risultati',
+            
+            // Footer
+            'footer-text': 'Progetto CLIL Arte/Spagnolo - Realizzato da Iacopo Stendardo, Sephora Congedi, Tommaso Rizzo'
+        },
+        'es': {
+            // Header
+            'main-title': 'Frida Kahlo y Diego Rivera',
+            'subtitle': 'Vanguardias Trasatlánticas',
+            
+            // Navbar
+            'nav-intro': 'Introducción',
+            'nav-timeline': 'Cronología',
+            'nav-gallery': 'Obras',
+            'nav-context': 'Vanguardias',
+            'nav-facts': 'Curiosidades',
+            'nav-quiz': 'Quiz',
+            'nav-vocab': 'Vocabulario',
+            
+            // Introduzione
+            'intro-title': 'El Encuentro de Dos Mundos',
+            'intro-text': 'En el panorama artístico del siglo XX, las vanguardias representaron una verdadera revolución. Movimientos como el Futurismo, el Surrealismo y el Cubismo rompieron con la tradición, buscando nuevas formas de expresión para narrar un mundo en rápido cambio. En este contexto dinámico se insertan dos figuras emblemáticas del arte mexicano: Frida Kahlo y Diego Rivera.\n\nAunque compartían una visión profundamente arraigada en la identidad y la historia de su país, los dos artistas siguieron caminos estilísticos diferentes. Rivera, exponente del muralismo, utilizó el arte público para contar la lucha social y la dignidad del pueblo. Kahlo, en cambio, transformó su pintura en un lenguaje íntimo y simbólico, abordando con valentía temas como el dolor, la identidad y el cuerpo, acercándose al Surrealismo sin identificarse plenamente con él.\n\nJuntos, Frida y Diego encarnan el alma revolucionaria del arte del siglo XX: personal, política, profundamente auténtica.',
+            
+            // Timeline
+            'timeline-title': 'Cronología Artística',
+            'frida-header': 'Frida Kahlo – Vida y carrera artística',
+            'diego-header': 'Diego Rivera – Vida y carrera artística',
+            
+            // Timeline Frida
+            'frida-1907': '1907 - Nace en Coyoacán, Ciudad de México.',
+            'frida-1922': '1922 - Ingresa a la Escuela Nacional Preparatoria; es una de las primeras mujeres admitidas.',
+            'frida-1925': '1925 - Sufre un grave accidente de autobús que cambia radicalmente su vida. Empieza a pintar durante la convalecencia.',
+            'frida-1926': '1926 - Realiza Autorretrato con traje de terciopelo, considerada su primera obra madura.',
+            'frida-1929': '1929 - Se casa con Diego Rivera.',
+            'frida-1931': '1931 - Expone en San Francisco junto a Rivera y pinta Frida y Diego Rivera.',
+            'frida-1938': '1938 - Realiza su primera exposición individual en la Julien Levy Gallery de Nueva York, con gran éxito.',
+            'frida-1939': '1939 - Expone en París: el Louvre adquiere una de sus obras (El cuadro), primera artista mexicana en la colección del museo. Ese mismo año pinta Las dos Fridas, una de sus obras más célebres. Se divorcia de Rivera.',
+            'frida-1940': '1940 - Se vuelve a casar con Diego Rivera.',
+            'frida-1944': '1944-1954 - Período de sus obras más íntimas y simbólicas: La columna rota, El venado herido, El abrazo de amor del universo.',
+            'frida-1953': '1953 - Primera y única exposición individual en México: participa en camilla debido a su estado de salud.',
+            'frida-1954': '1954 - Muere a los 47 años en Coyoacán.',
+            
+            // Timeline Diego
+            'diego-1886': '1886 - Nace en Guanajuato, México.',
+            'diego-1897': '1897 - Estudia en la Academia de San Carlos en la Ciudad de México.',
+            'diego-1907': '1907-1921 - Vive y trabaja en Europa (España, Francia, Italia). En París entra en contacto con el Cubismo y el arte moderno.',
+            'diego-1922': '1922 - Inicia el primer gran ciclo de murales en el Ministerio de Educación Pública en la Ciudad de México: se convierte en figura clave del muralismo mexicano.',
+            'diego-1929': '1929 - Se casa con Frida Kahlo.',
+            'diego-1931': '1931 - Obtiene una gran retrospectiva en el MoMA de Nueva York.',
+            'diego-1933': '1933 - Realiza un fresco para el Rockefeller Center en Nueva York, que es destruido por incluir a Lenin en la obra.',
+            'diego-1940': '1940 - Se vuelve a casar con Frida Kahlo después del divorcio. Comienza el mural Panorama de la opresión y la resistencia en México.',
+            'diego-1947': '1947 - Publica su autobiografía My Art, My Life.',
+            'diego-1952': '1952 - Completa uno de sus mayores trabajos: el mural de la Universidad Autónoma de la Ciudad de México.',
+            'diego-1957': '1957 - Muere a los 70 años en la Ciudad de México.',
+            
+            // Galleria
+            'gallery-title': 'Obras Icónicas',
+            'frida-gallery-title': 'Frida Kahlo',
+            'diego-gallery-title': 'Diego Rivera',
+            
+            // Opere Frida
+            'frida-work1-title': 'Las dos Fridas (1939)',
+            'frida-work1-desc': 'Una de sus obras más célebres es Las dos Fridas (1939), donde se autorretrata en doble versión: una con vestido europeo y otra con ropa tradicional mexicana. Las dos figuras están conectadas por una vena que simboliza el vínculo entre las dos identidades y el dolor del corazón roto. Es una obra que refleja la fractura interior vivida por Frida tras su separación de Diego Rivera y representa su lucha entre modernidad y raíces culturales.',
+            'frida-work2-title': 'La columna rota (1944)',
+            'frida-work2-desc': 'Otra obra iconica es La columna rota (1944), un autorretrato donde Frida se muestra con el torso abierto, la columna vertebral reemplazada por una columna jónica fracturada y el cuerpo atravesado por clavos. Es una imagen poderosa y dolorosa que representa sus graves sufrimientos físicos y psicológicos. La artista se presenta desnuda, vulnerable, pero con la mirada firme y directa hacia el espectador, transformando el dolor en fuerza.',
+            'frida-work3-title': 'Autorretrato con collar de espinas (1940)',
+            'frida-work3-desc': 'Finalmente, Autorretrato con collar de espinas (1940) muestra a Frida rodeada de símbolos fuertes: un mono que tira del collar de espinas, un gato negro y un colibrí muerto. Todos elementos ricos en significado, entre cristianismo, cultura azteca y visión personal del dolor. También aquí, el sufrimiento no se esconde, sino que se hace visible como parte integral de su identidad.',
+            
+            // Opere Diego
+            'diego-work1-title': 'El hombre controlador del universo (1934)',
+            'diego-work1-desc': 'Una obra fundamental es El hombre controlador del universo (1934). Encargada para el Rockefeller Center de Nueva York, la obra fue destruida por incluir a Lenin en el mural, considerado inaceptable por los comitentes. Rivera recreó el mural en México, narrando la humanidad dividida entre capitalismo y socialismo, progreso tecnológico e injusticia. La obra es un ejemplo emblemático de su compromiso político y su visión ideológica.',
+            'diego-work2-title': 'La epopeya del pueblo mexicano (1929-1935)',
+            'diego-work2-desc': 'Epopeya del pueblo mexicano es un gran mural de Diego Rivera, pintado entre 1929 y 1935 en el Palacio Nacional de la Ciudad de México. Representa la historia de México desde las civilizaciones precolombinas hasta la Revolución, con un fuerte mensaje social y político. Rivera exalta las raíces indígenas, denuncia la conquista española y celebra la lucha del pueblo contra la opresión. Es una de las obras más representativas del muralismo mexicano.',
+            'diego-work3-title': 'Pared sur de "Industria de Detroit" (1932)',
+            'diego-work3-desc': 'Pared Sur de la Industria de Detroit es uno de los paneles centrales del ciclo mural de Diego Rivera en el Detroit Institute of Arts (1932-1933). Representa a los obreros en las cadenas de montaje de Ford, en un ambiente industrial dinámico y mecanizado. Rivera exalta la fuerza del trabajo humano, pero también muestra el cansancio y la alienación causados por la industria moderna. Es una obra que une arte, tecnología y crítica social.',
+            
+            // Contesto storico
+            'context-title': 'Las Vanguardias del \'900',
+             'context-p1': 'El siglo XX fue un siglo de revoluciones artísticas que redefinieron completamente el concepto de arte. Las vanguardias, movimientos culturales de avanzada, desafiaron las convenciones tradicionales explorando nuevas formas de expresión.',
+        'context-h3-1': 'Surrealismo',
+        'context-p2': 'El Surrealismo, nacido en los años 20, buscaba explorar el inconsciente y el mundo de los sueños. Aunque Frida Kahlo negaba ser surrealista, muchas de sus obras muestran claros elementos surrealistas en la representación simbólica de su mundo interior.',
+        'context-h3-2': 'Muralismo Mexicano',
+        'context-p3': 'Diego Rivera fue uno de los máximos exponentes del muralismo mexicano, movimiento que utilizaba grandes frescos murales para contar la historia y las luchas sociales de México. Este movimiento tuvo un fuerte impacto político y social.',
+        'context-h3-3': 'Cubismo',
+        'context-p4': 'Durante su estancia en París, Rivera fue influenciado por el Cubismo de Picasso, que fragmentaba la realidad en formas geométricas. Esta experiencia influyó en su estilo maduro, manteniendo siempre un fuerte vínculo con la tradición mexicana.',
+            
+            // Mappa
+            'map-title': 'Lugares Significativos',
+            'map-description': 'Este mapa muestra los lugares más importantes en la vida de Frida Kahlo y Diego Rivera, desde su nacimiento hasta las principales obras realizadas en México y en el extranjero.',
+            
+            // Curiosità
+            'facts-title': 'Cosas que no sabías sobre Frida y Diego...',
+            'facts-subtitle': 'Curiosidades divertidas sobre Frida Kahlo y Diego Rivera',
+            'fact1': '<strong>Frida y su amor por los animales "extraños"</strong><br>Además de perros y pájaros, Frida tenía un monito llamado "Fulang-Chang" que era casi como un miembro de la familia... ¡a veces incluso le lanzaba "miradas de desaprovación" como una verdadera hermana mayor!',
+            'fact2': '<strong>Diego Rivera era un tipo muy "alto"</strong><br>¡Diego era realmente alto: medía más de 1,90 m! Junto a Frida, que era mucho más pequeña, formaban una pareja con un enorme contraste de altura, tanto que a menudo bromeaban sobre ello.',
+            'fact3': '<strong>Frida, campeona de póker... con la familia</strong><br>Se dice que Frida era muy competitiva en los juegos de cartas y le encantaba jugar al póker con familiares y amigos. ¡Dicen que era muy buena bluffando!',
+            'fact4': '<strong>Diego Rivera y sus "amores artísticos"</strong><br>Además de Frida, Diego tuvo muchos romances, pero el más curioso es que por un tiempo se enamoró de la sobrina de Frida... ¡un verdadero lío familiar!',
+            'fact5': '<strong>Frida y sus cejas legendarias</strong><br>¡Las cejas de Frida se han vuelto icónicas, pero ella las cuidaba con mucho esmero, hasta el punto de decir que nunca quería separarlas. Era una verdadera "modelo" de cejas pobladas!',
+            'fact6': '<strong>Diego Rivera y el almuerzo récord</strong><br>Se cuenta que Diego era un gran amante de la comida y podía comer cantidades increíbles de comida mexicana, especialmente tamales y mole. ¡En la mesa nunca se quedaba atrás!',
+            'fact7': '<strong>Frida y sus autorretratos... incluso cuando estaba enferma</strong><br>Cuando estaba obligada a guardar cama por sus tratamientos, Frida se hacía retratar con un espejo sobre la cama, demostrando que incluso en la enfermedad nunca perdía su sentido del humor y la creatividad.',
+            
+            // Vocabolario
+            'vocab-title': 'Vocabulario Artístico',
+               
+               'vocab-title1': 'Autoritratto / Autorretrato',
+        'vocab-desc1': 'Retrato de un artista realizado por sí mismo',
+        'vocab-title2': 'Muralismo / Muralismo',
+        'vocab-desc2': 'Movimiento artístico que crea grandes pinturas en paredes y techos',
+        'vocab-title3': 'Surrealismo / Surrealismo',
+        'vocab-desc3': 'Movimiento artístico que explora el inconsciente y el mundo de los sueños',
+        'vocab-title4': 'Simbolismo / Simbolismo',
+        'vocab-desc4': 'Uso de símbolos para representar ideas y emociones',
+        'vocab-title5': 'Avanguardia / Vanguardia',
+        'vocab-desc5': 'Grupo de artistas que experimentan con nuevas ideas y técnicas',
+        'vocab-title6': 'Colore vibrante / Color vibrante',
+        'vocab-desc6': 'Tonos intensos y vivos típicos del arte mexicano',
+    
+            
+            // Quiz
+            'quiz-title': '¡Ponte a prueba!',
+            'quiz-q1': '1. ¿Dónde nació Frida Kahlo?',
+            'quiz-q1-option1': 'A) Guadalajara',
+            'quiz-q1-option2': 'B) Ciudad de México',
+            'quiz-q1-option3': 'C) Monterrey',
+            'quiz-q1-option4': 'D) Oaxaca',
+            'quiz-q1-feedback-correct': '✅ ¡Correcto! Frida Kahlo nació el 6 de julio de 1907 en Coyoacán, un barrio de la Ciudad de México.',
+            'quiz-q1-feedback-incorrect': '❌ ¡Incorrecto! La respuesta correcta es: B) Ciudad de México. Frida nació en Coyoacán, un barrio de la Ciudad de México.',
+            
+            'quiz-q2': '2. ¿Qué representa a menudo Frida en sus cuadros?',
+            'quiz-q2-option1': 'A) Escenas mitológicas',
+            'quiz-q2-option2': 'B) Paisajes naturales',
+            'quiz-q2-option3': 'C) A sí misma y su dolor',
+            'quiz-q2-option4': 'D) Guerras',
+            'quiz-q2-feedback-correct': '✅ ¡Correcto! Frida Kahlo es famosa por sus numerosos autorretratos que exploran su identidad, dolor físico y sufrimiento emocional.',
+            'quiz-q2-feedback-incorrect': '❌ ¡Incorrecto! La respuesta correcta es: C) A sí misma y su dolor. Frida es famosa por sus autorretratos introspectivos.',
+            
+            'quiz-q3': '3. ¿Qué tipo de arte realizaba principalmente Diego Rivera?',
+            'quiz-q3-option1': 'A) Escultura',
+            'quiz-q3-option2': 'B) Mosaico',
+            'quiz-q3-option3': 'C) Murales',
+            'quiz-q3-option4': 'D) Arte abstracto',
+            'quiz-q3-feedback-correct': '✅ ¡Correcto! Diego Rivera es considerado uno de los máximos exponentes del muralismo mexicano, con obras monumentales que decoran edificios públicos.',
+            'quiz-q3-feedback-incorrect': '❌ ¡Incorrecto! La respuesta correcta es: C) Murales. Rivera es famoso por sus grandes murales con temas sociales y políticos.',
+            
+            'quiz-q4': '4. ¿En qué ciudad se encuentra el ciclo de murales sobre la "Industria de Detroit"?',
+            'quiz-q4-option1': 'A) Chicago',
+            'quiz-q4-option2': 'B) Nueva York',
+            'quiz-q4-option3': 'C) Detroit',
+            'quiz-q4-option4': 'D) Boston',
+            'quiz-q4-feedback-correct': '✅ ¡Correcto! El ciclo "Detroit Industry Murals" (1932-1933) se encuentra en el Detroit Institute of Arts y celebra la industria automotriz de la ciudad.',
+            'quiz-q4-feedback-incorrect': '❌ ¡Incorrecto! La respuesta correcta es: C) Detroit. Los murales se encuentran en el Detroit Institute of Arts.',
+            
+            'quiz-q5': '5. ¿Cuál de las siguientes es una obra de Frida Kahlo?',
+            'quiz-q5-option1': 'A) Las dos Fridas',
+            'quiz-q5-option2': 'B) El Guernica',
+            'quiz-q5-option3': 'C) El grito',
+            'quiz-q5-option4': 'D) Noche estrellada',
+            'quiz-q5-feedback-correct': '✅ ¡Correcto! "Las dos Fridas" (1939) es uno de los cuadros más famosos de Frida Kahlo, realizado durante su divorcio de Diego Rivera.',
+            'quiz-q5-feedback-incorrect': '❌ ¡Incorrecto! La respuesta correcta es: A) Las dos Fridas. Las otras obras son de Picasso ("Guernica"), Munch ("El grito") y Van Gogh ("Noche estrellada").',
+            
+            'quiz-q6': '6. ¿Quién de los dos artistas vivió mucho tiempo en Europa?',
+            'quiz-q6-option1': 'A) Frida Kahlo',
+            'quiz-q6-option2': 'B) Diego Rivera',
+            'quiz-q6-option3': 'C) Ninguno de los dos',
+            'quiz-q6-option4': 'D) Ambos',
+            'quiz-q6-feedback-correct': '✅ ¡Correcto! Diego Rivera vivió en Europa (especialmente en París) desde 1907 hasta 1921, donde entró en contacto con el Cubismo y otros movimientos de vanguardia.',
+            'quiz-q6-feedback-incorrect': '❌ ¡Incorrecto! La respuesta correcta es: B) Diego Rivera. Vivió en Europa durante 14 años, mientras que Frida viajó mucho pero no residió allí mucho tiempo.',
+            
+            // Risultati quiz
+            'quiz-results-title': 'Resultado del Quiz',
+            'quiz-results-text': '¡Has obtenido {score} puntos de 6!',
+            'quiz-results-button': 'Intentar de nuevo',
+            'quiz-show-results': 'Mostrar resultados',
+            
+            // Footer
+            'footer-text': 'Proyecto CLIL Arte/Español - Realizado por Iacopo Stendardo, Sephora Congedi, Tommaso Rizzo'
+        }
+    };
+
+    // Funzione per mostrare/nascondere le info delle opere d'arte
+    function toggleArtInfo(card) {
+        // Chiudi tutte le altre card aperte
+        document.querySelectorAll('.art-card').forEach(item => {
+            if (item !== card) {
+                item.classList.remove('active');
+            }
+        });
+        
+        // Apri/chiudi la card cliccata
+        card.classList.toggle('active');
+    }
+
+    // Funzione per aprire il lightbox
+    function openLightbox(imgSrc, caption) {
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightbox-img');
+        const lightboxCaption = document.getElementById('lightbox-caption');
+        
+        lightboxImg.src = imgSrc;
+        lightboxImg.alt = caption;
+        lightboxCaption.textContent = caption;
+        lightbox.style.display = 'flex';
+        document.body.style.overflow = 'hidden'; // Disabilita lo scroll
+    }
+
+    // Funzione per chiudere il lightbox
+    function closeLightbox() {
+        const lightbox = document.getElementById('lightbox');
+        lightbox.style.display = 'none';
+        document.body.style.overflow = 'auto'; // Riabilita lo scroll
+    }
+
+    // Chiudi lightbox cliccando fuori dall'immagine
+    document.getElementById('lightbox').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeLightbox();
+        }
+    });
+
+    // Funzione per verificare le risposte del quiz
+    function checkAnswer(option, isCorrect) {
+        const questionDiv = option.closest('.quiz-question');
+        const feedbackDivs = questionDiv.querySelectorAll('.quiz-feedback');
+        
+        // Disabilita tutte le opzioni dopo la risposta
+        questionDiv.querySelectorAll('.quiz-option').forEach(opt => {
+            opt.onclick = null;
+            if (opt === option) {
+                opt.classList.add(isCorrect ? 'correct' : 'incorrect');
+            }
+        });
+        
+        // Mostra il feedback appropriato
+        feedbackDivs.forEach(fb => {
+            fb.classList.remove('show');
+            if ((isCorrect && fb.classList.contains('correct-feedback')) || 
+                (!isCorrect && fb.classList.contains('incorrect-feedback'))) {
+                fb.classList.add('show');
+            }
+        });
+        
+        // Aggiorna il punteggio
+        if (isCorrect) {
+            score++;
+        }
+        
+        // Controlla se tutte le domande sono state risposte
+        answeredQuestions++;
+        if (answeredQuestions === 6) {
+            document.querySelector('.show-results').style.display = 'block';
+        }
+    }
+
+    // Mostra i risultati del quiz
+    function showResults() {
+        const resultsDiv = document.getElementById('quiz-results');
+        const scoreSpan = document.getElementById('quiz-score');
+        
+        scoreSpan.textContent = score;
+        resultsDiv.classList.add('show');
+        document.querySelector('.show-results').style.display = 'none';
+        
+        // Traduci i risultati
+        const resultsTitle = resultsDiv.querySelector('h3');
+        const resultsText = resultsDiv.querySelector('p');
+        const resultsButton = resultsDiv.querySelector('button');
+        
+        if (currentLang === 'es') {
+            resultsTitle.textContent = translations[currentLang]['quiz-results-title'];
+            resultsText.innerHTML = translations[currentLang]['quiz-results-text'].replace('{score}', score);
+            resultsButton.textContent = translations[currentLang]['quiz-results-button'];
+        } else {
+            resultsTitle.textContent = translations['it']['quiz-results-title'];
+            resultsText.innerHTML = translations['it']['quiz-results-text'].replace('{score}', score);
+            resultsButton.textContent = translations['it']['quiz-results-button'];
+        }
+    }
+
+    // Resetta il quiz
+    function resetQuiz() {
+        score = 0;
+        answeredQuestions = 0;
+        
+        // Resetta tutte le domande
+        document.querySelectorAll('.quiz-question').forEach(question => {
+            question.querySelectorAll('.quiz-option').forEach(option => {
+                option.onclick = function() {
+                    checkAnswer(option, option.getAttribute('data-is-correct') === 'true');
+                };
+                option.classList.remove('correct', 'incorrect');
+            });
+            
+            question.querySelectorAll('.quiz-feedback').forEach(fb => {
+                fb.classList.remove('show');
+            });
+        });
+        
+        // Nascondi i risultati
+        document.getElementById('quiz-results').classList.remove('show');
+        document.querySelector('.show-results').style.display = 'none';
+    }
+
+    // Funzione per tradurre tutto il contenuto
+    function translatePage(lang) {
+        currentLang = lang;
+        
+        // 1. Traduci elementi con ID
+        for (const [key, value] of Object.entries(translations[lang])) {
+            const element = document.getElementById(key);
+            if (element) {
+                if (key === 'intro-text') {
+                    element.innerHTML = value.replace(/\n\n/g, '<br><br>');
+                } else {
+                    element.textContent = value;
+                }
+            }
+        }
+        
+        // 2. Traduci elementi con data-translate-key
+        document.querySelectorAll('[data-translate-key]').forEach(el => {
+            const key = el.getAttribute('data-translate-key');
+            if (translations[lang][key]) {
+                el.innerHTML = translations[lang][key];
+            }
+        });
+        
+        // 3. Traduci le timeline
+        const timelineItems = document.querySelectorAll('.timeline-item');
+        timelineItems.forEach(item => {
+            const key = item.getAttribute('data-translate-key');
+            if (translations[lang][key]) {
+                const translatedText = translations[lang][key].split(' - ')[1];
+                item.querySelector('p').textContent = translatedText;
+            }
+        });
+        
+        // 4. Aggiorna lo stato attivo dei pulsanti di lingua
+        document.getElementById('lang-it').classList.toggle('active', lang === 'it');
+        document.getElementById('lang-es').classList.toggle('active', lang === 'es');
+        
+        // 5. Aggiorna i risultati del quiz se visibili
+        if (document.getElementById('quiz-results').classList.contains('show')) {
+            showResults();
+        }
+    }
+
+    // Inizializza la mappa
+    function initMap() {
+        const map = L.map('map').setView([19.4326, -99.1332], 5); // Centrato sul Messico
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+        
+        // Aggiungi marcatori per i luoghi significativi
+        const locations = [
+            {
+                name: 'Casa Azul (Museo Frida Kahlo)',
+                coords: [19.3554, -99.1622],
+                description: 'Casa natale di Frida Kahlo e luogo dove visse con Diego Rivera'
+            },
+            {
+                name: 'Palazzo Nazionale',
+                coords: [19.4326, -99.1313],
+                description: 'Sede dei famosi murales di Diego Rivera'
+            },
+            {
+                name: 'Scuola Nazionale Preparatoria',
+                coords: [19.4333, -99.1336],
+                description: 'Dove Frida studiò e incontrò per la prima volta Diego'
+            },
+            {
+                name: 'Detroit Institute of Arts',
+                coords: [42.3595, -83.0656],
+                description: 'Dove si trovano i murales "Industria di Detroit" di Rivera'
+            },
+            {
+                name: 'Museo Dolores Olmedo',
+                coords: [19.2839, -99.1056],
+                description: 'Importante collezione di opere di Frida Kahlo e Diego Rivera'
+            }
+        ];
+        
+        locations.forEach(loc => {
+            const marker = L.marker(loc.coords).addTo(map)
+                .bindPopup(`<strong>${loc.name}</strong><br>${loc.description}`);
+        });
+    }
+
+    // Event listener per il toggle della lingua
+    document.getElementById('lang-it').addEventListener('click', function() {
+        if (currentLang !== 'it') {
+            translatePage('it');
+        }
+    });
+
+    document.getElementById('lang-es').addEventListener('click', function() {
+        if (currentLang !== 'es') {
+            translatePage('es');
+        }
+    });
+
+    // FUNZIONE PER IL PULSANTE "TORNA SU"
+    const backToTopBtn = document.getElementById('back-to-top');
+    
+    window.addEventListener('scroll', () => {
+        // Mostra/nascondi il pulsante dopo metà pagina
+        if (window.scrollY > window.innerHeight / 2) {
+            backToTopBtn.style.display = 'block';
+            setTimeout(() => {
+                backToTopBtn.style.opacity = '1';
+                backToTopBtn.style.transform = 'scale(1)';
+            }, 10);
+        } else {
+            backToTopBtn.style.opacity = '0';
+            backToTopBtn.style.transform = 'scale(0.8)';
+            setTimeout(() => {
+                backToTopBtn.style.display = 'none';
+            }, 300);
+        }
+    });
+    
+    backToTopBtn.addEventListener('click', () => {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    });
+
+    // ANIMAZIONE DI APPARIZIONE DELLE SEZIONI AL LOAD E SCROLL
+    function animateSections() {
+        const sections = document.querySelectorAll('section');
+        
+        sections.forEach(section => {
+            const sectionTop = section.getBoundingClientRect().top;
+            const windowHeight = window.innerHeight;
+            
+            if (sectionTop < windowHeight * 0.85) {
+                section.style.animation = 'fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards';
+            }
+        });
+    }
+    
+    // Inizializza la mappa quando la pagina è caricata
+    window.addEventListener('load', function() {
+        initMap();
+        animateSections();
+        
+        // Imposta l'evento per il pulsante mostra risultati
+        document.querySelector('.show-results').addEventListener('click', showResults);
+        
+        // Imposta l'evento per il pulsante reset quiz
+        document.querySelector('#quiz-results button').addEventListener('click', resetQuiz);
+    });
+
+    // Animazione al caricamento delle immagini
+    document.querySelectorAll('.art-card img').forEach(img => {
+        if (img.complete) {
+            img.classList.add('loaded');
+        } else {
+            img.onload = function() {
+                this.classList.add('loaded');
+            };
+        }
+    });
+
+    // Animazione delle sezioni allo scroll
+    window.addEventListener('scroll', animateSections);
+    </script>
+</body>
+</html>
